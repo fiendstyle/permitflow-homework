@@ -6,7 +6,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { trpc } from "@/lib/trpc"
 import { useMutation } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
-import { useNavigate } from "react-router"
 
 type WorkType = "interior" | "exterior" | "property_additions"
 
@@ -29,13 +28,14 @@ type ExteriorWork =
 
 type PropertyAddition = "adu" | "garage_conversion" | "basement_attic_conversion" | "other"
 
+type PermitRequirement = "in_house_review" | "otc_review" | "no_permit"
+
 export function QuestionnaireForm() {
-  const navigate = useNavigate()
-  
   const [workTypes, setWorkTypes] = useState<WorkType[]>([])
   const [interiorWork, setInteriorWork] = useState<InteriorWork[]>([])
   const [exteriorWork, setExteriorWork] = useState<ExteriorWork[]>([])
   const [propertyAddition, setPropertyAddition] = useState<PropertyAddition | "">("")
+  const [requirements, setRequirements] = useState<PermitRequirement | null>(null)
 
   const { mutateAsync: submitQuestionnaire, isPending } = useMutation(trpc.questionnaire.submit.mutationOptions())
 
@@ -75,14 +75,47 @@ export function QuestionnaireForm() {
     }
 
     try {
-      await submitQuestionnaire(responses)
-      navigate("/projects")
+      const result = await submitQuestionnaire(responses)
+      setRequirements(result.permitRequirement)
     } catch (error) {
       console.error("Failed to submit questionnaire:", error)
     }
   }
 
+  const getRequirementDisplay = (req: PermitRequirement | null) => {
+    if (!req) return null
+    
+    if (req === "in_house_review") {
+      return {
+        title: "✅ In-House Review Process",
+        description: [
+          "A building permit is required.",
+          "Include plan sets.",
+          "Submit application for in-house review."
+        ]
+      }
+    } else if (req === "otc_review") {
+      return {
+        title: "✅ Over-the-Counter Submission Process",
+        description: [
+          "A building permit is required.",
+          "Submit application for OTC review."
+        ]
+      }
+    } else {
+      return {
+        title: "❌ No Permit Required",
+        description: [
+          "Nothing is required! You're set to build."
+        ]
+      }
+    }
+  }
+
+  const requirementDisplay = getRequirementDisplay(requirements)
+
   return (
+    <div className="space-y-4">
     <Card>
       <CardHeader>
         <CardTitle>Scope of Work Questionnaire</CardTitle>
@@ -184,6 +217,25 @@ export function QuestionnaireForm() {
         </Button>
       </CardContent>
     </Card>
+
+      {/* Results Card - shown after submission */}
+      {requirements && requirementDisplay && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{requirementDisplay.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 list-disc list-inside">
+              {requirementDisplay.description.map((item, index) => (
+                <li key={index} className="text-sm">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
 
