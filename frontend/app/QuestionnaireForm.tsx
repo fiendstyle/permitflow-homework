@@ -3,8 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { trpc } from "@/lib/trpc"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
+import { useMutation } from "@tanstack/react-query"
 
 type WorkType = "interior" | "exterior" | "property_additions"
 
@@ -35,6 +37,8 @@ export function QuestionnaireForm() {
   const [exteriorWork, setExteriorWork] = useState<ExteriorWork[]>([])
   const [propertyAddition, setPropertyAddition] = useState<PropertyAddition | "">("")
 
+  const { mutateAsync: submitQuestionnaire, isPending } = useMutation(trpc.questionnaire.submit.mutationOptions())
+
   const canSubmit = useMemo(() => {
     if (workTypes.length === 0) return false
     if (workTypes.includes("interior") && interiorWork.length === 0) return false
@@ -62,13 +66,20 @@ export function QuestionnaireForm() {
     setExteriorWork((prev) => (checked ? [...prev, value] : prev.filter((v) => v !== value)))
   }
 
-  const onSubmit = () => {
-    // Log the submission
-    // eslint-disable-next-line no-console
-    console.log({ workTypes, interiorWork, exteriorWork, propertyAddition })
-    
-    // Navigate back to projects page after submission
-    navigate("/projects")
+  const onSubmit = async () => {
+    const responses = {
+      workTypes,
+      interiorWork: workTypes.includes("interior") ? interiorWork : undefined,
+      exteriorWork: workTypes.includes("exterior") ? exteriorWork : undefined,
+      propertyAddition: workTypes.includes("property_additions") ? propertyAddition : undefined
+    }
+
+    try {
+      await submitQuestionnaire(responses)
+      navigate("/projects")
+    } catch (error) {
+      console.error("Failed to submit questionnaire:", error)
+    }
   }
 
   return (
@@ -168,8 +179,8 @@ export function QuestionnaireForm() {
           </div>
         )}
 
-        <Button className="w-full" disabled={!canSubmit} onClick={onSubmit}>
-          Submit questionnaire
+        <Button className="w-full" disabled={!canSubmit || isPending} onClick={onSubmit}>
+          {isPending ? "Submitting..." : "Submit questionnaire"}
         </Button>
       </CardContent>
     </Card>
