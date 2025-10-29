@@ -33,6 +33,7 @@ export type PermitRequirement = "in_house_review" | "otc_review" | "no_permit"
 
 export interface QuestionnaireResponse {
   id: string
+  projectId: string
   responses: QuestionnaireSchema
   permitRequirement: PermitRequirement
   createdAt: string

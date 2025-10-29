@@ -43,7 +43,7 @@ export function Project() {
 
       <div className="flex flex-col gap-2 mt-4">
         <Subheading>Questionnaire</Subheading>
-        <QuestionnaireForm />
+        <QuestionnaireForm projectId={id!} />
         <Button 
           variant="outline" 
           onClick={() => navigate("/projects")}

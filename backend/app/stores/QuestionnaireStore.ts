@@ -2,6 +2,7 @@ import { Store, type StoreItem } from "#core/Store.ts"
 import { type QuestionnaireResponse, type PermitRequirement } from "#app/schemas/questionnaire.ts"
 
 interface QuestionnaireItem extends StoreItem {
+  projectId: string
   responses: any
   permitRequirement: PermitRequirement
 }
@@ -11,9 +12,15 @@ export class QuestionnaireStore extends Store<QuestionnaireItem> {
     super("questionnaires")
   }
 
+  getByProjectId(projectId: string): QuestionnaireItem | undefined {
+    const all = this.getAll()
+    return all.find(q => q.projectId === projectId)
+  }
+
   toModel(item: QuestionnaireItem): QuestionnaireResponse {
     return {
       id: item.id,
+      projectId: item.projectId,
       responses: item.responses,
       permitRequirement: item.permitRequirement,
       createdAt: item.createdAt.toISOString()

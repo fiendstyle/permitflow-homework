@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { trpc } from "@/lib/trpc"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 
 type WorkType = "interior" | "exterior" | "property_additions"
@@ -30,7 +30,11 @@ type PropertyAddition = "adu" | "garage_conversion" | "basement_attic_conversion
 
 type PermitRequirement = "in_house_review" | "otc_review" | "no_permit"
 
-export function QuestionnaireForm() {
+interface QuestionnaireFormProps {
+  projectId: string
+}
+
+export function QuestionnaireForm({ projectId }: QuestionnaireFormProps) {
   const [workTypes, setWorkTypes] = useState<WorkType[]>([])
   const [interiorWork, setInteriorWork] = useState<InteriorWork[]>([])
   const [exteriorWork, setExteriorWork] = useState<ExteriorWork[]>([])
@@ -38,6 +42,22 @@ export function QuestionnaireForm() {
   const [requirements, setRequirements] = useState<PermitRequirement | null>(null)
 
   const { mutateAsync: submitQuestionnaire, isPending } = useMutation(trpc.questionnaire.submit.mutationOptions())
+  
+  // Load existing questionnaire when component mounts
+  const { data: existingQuestionnaire } = useQuery(
+    trpc.questionnaire.getByProject.queryOptions({ projectId })
+  )
+
+  // Populate form with existing questionnaire data when available
+  useMemo(() => {
+    if (existingQuestionnaire) {
+      setWorkTypes(existingQuestionnaire.responses.workTypes)
+      setInteriorWork(existingQuestionnaire.responses.interiorWork || [])
+      setExteriorWork(existingQuestionnaire.responses.exteriorWork || [])
+      setPropertyAddition(existingQuestionnaire.responses.propertyAddition || "")
+      setRequirements(existingQuestionnaire.permitRequirement)
+    }
+  }, [existingQuestionnaire])
 
   const canSubmit = useMemo(() => {
     if (workTypes.length === 0) return false
@@ -75,7 +95,10 @@ export function QuestionnaireForm() {
     }
 
     try {
-      const result = await submitQuestionnaire(responses)
+      const result = await submitQuestionnaire({
+        ...responses,
+        projectId
+      })
       setRequirements(result.permitRequirement)
     } catch (error) {
       console.error("Failed to submit questionnaire:", error)
