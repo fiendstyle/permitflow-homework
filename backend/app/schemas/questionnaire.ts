@@ -29,9 +29,12 @@ export const QUESTIONNAIRE_SCHEMA = z.object({
 
 export type QuestionnaireSchema = z.infer<typeof QUESTIONNAIRE_SCHEMA>
 
+export type PermitRequirement = "in_house_review" | "otc_review" | "no_permit"
+
 export interface QuestionnaireResponse {
   id: string
   responses: QuestionnaireSchema
+  permitRequirement: PermitRequirement
   createdAt: string
 }
 

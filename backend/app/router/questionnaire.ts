@@ -5,8 +5,10 @@ export const questionnaire = router({
   submit: procedure
     .input(QUESTIONNAIRE_SCHEMA)
     .mutation(async ({ ctx, input }) => {
+      const permitRequirement = ctx.cradle.questionnaires.calculatePermitRequirement(input)
       const questionnaire = ctx.cradle.questionnaires.add({
-        responses: input
+        responses: input,
+        permitRequirement
       })
       return ctx.cradle.questionnaires.toModel(questionnaire)
     }),

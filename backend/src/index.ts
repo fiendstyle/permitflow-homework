@@ -10,6 +10,35 @@ const app = new Hono()
   .get("/", (c) => c.text("OK"))
   .get("/questionnaires", (c) => {
     const questionnaires = container.cradle.questionnaires.getAll()
+    
+    const getRequirementDetails = (req: string) => {
+      if (req === "in_house_review") {
+        return `
+          <strong>✅ In-House Review Process</strong>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>A building permit is required.</li>
+            <li>Include plan sets.</li>
+            <li>Submit application for in-house review.</li>
+          </ul>
+        `
+      } else if (req === "otc_review") {
+        return `
+          <strong>✅ Over-the-Counter Submission Process</strong>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>A building permit is required.</li>
+            <li>Submit application for OTC review.</li>
+          </ul>
+        `
+      } else {
+        return `
+          <strong>❌ No Permit Required</strong>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Nothing is required! You're set to build.</li>
+          </ul>
+        `
+      }
+    }
+    
     const html = `
       <!DOCTYPE html>
       <html>
@@ -59,6 +88,9 @@ const app = new Hono()
                     ${model.responses.interiorWork ? `<div class="work-type"><strong>Interior:</strong> ${model.responses.interiorWork.join(', ')}</div>` : ''}
                     ${model.responses.exteriorWork ? `<div class="work-type"><strong>Exterior:</strong> ${model.responses.exteriorWork.join(', ')}</div>` : ''}
                     ${model.responses.propertyAddition ? `<div class="work-type"><strong>Addition:</strong> ${model.responses.propertyAddition}</div>` : ''}
+                    <div style="margin-top: 15px; padding: 15px; background: ${model.permitRequirement === 'in_house_review' ? '#ffebee' : model.permitRequirement === 'otc_review' ? '#e3f2fd' : '#e8f5e9'}; border-radius: 4px; border-left: 4px solid ${model.permitRequirement === 'in_house_review' ? '#f44336' : model.permitRequirement === 'otc_review' ? '#2196f3' : '#4caf50'};">
+                      ${getRequirementDetails(model.permitRequirement)}
+                    </div>
                     <div class="timestamp">Submitted: ${new Date(model.createdAt).toLocaleString()}</div>
                   </div>
                 `
