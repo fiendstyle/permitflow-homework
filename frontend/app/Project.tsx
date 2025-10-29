@@ -7,13 +7,16 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb"
+import { Button } from "@/components/ui/button"
 import { trpc } from "@/lib/trpc"
 import { useQuery } from "@tanstack/react-query"
+import { useNavigate } from "react-router"
 import { Heading, Subheading } from "./Heading"
 import { QuestionnaireForm } from "./QuestionnaireForm"
 
 export function Project() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { data: project } = useQuery(trpc.projects.get.queryOptions({ id: id! }))
 
   if (!project) {
@@ -41,6 +44,13 @@ export function Project() {
       <div className="flex flex-col gap-2 mt-4">
         <Subheading>Questionnaire</Subheading>
         <QuestionnaireForm />
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/projects")}
+          className="self-start"
+        >
+          Back to Projects
+        </Button>
       </div>
     </div>
   )
