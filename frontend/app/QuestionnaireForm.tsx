@@ -212,9 +212,11 @@ export function QuestionnaireForm() {
           </div>
         )}
 
-        <Button className="w-full" disabled={!canSubmit || isPending} onClick={onSubmit}>
-          {isPending ? "Submitting..." : "Submit questionnaire"}
-        </Button>
+        {!requirements && (
+          <Button className="w-full" disabled={!canSubmit || isPending} onClick={onSubmit}>
+            {isPending ? "Submitting..." : "Submit questionnaire"}
+          </Button>
+        )}
       </CardContent>
     </Card>
 
