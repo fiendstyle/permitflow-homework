@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useMemo, useState } from "react"
+import { useNavigate } from "react-router"
 
 type WorkType = "interior" | "exterior" | "property_additions"
 
@@ -27,6 +28,8 @@ type ExteriorWork =
 type PropertyAddition = "adu" | "garage_conversion" | "basement_attic_conversion" | "other"
 
 export function QuestionnaireForm() {
+  const navigate = useNavigate()
+  
   const [workTypes, setWorkTypes] = useState<WorkType[]>([])
   const [interiorWork, setInteriorWork] = useState<InteriorWork[]>([])
   const [exteriorWork, setExteriorWork] = useState<ExteriorWork[]>([])
@@ -60,10 +63,12 @@ export function QuestionnaireForm() {
   }
 
   const onSubmit = () => {
-    // Step 1 only: UI + state. Wire up persistence and calculation in later steps.
-    // For quick visibility during development, log the selection.
+    // Log the submission
     // eslint-disable-next-line no-console
     console.log({ workTypes, interiorWork, exteriorWork, propertyAddition })
+    
+    // Navigate back to projects page after submission
+    navigate("/projects")
   }
 
   return (
@@ -155,8 +160,8 @@ export function QuestionnaireForm() {
                 { value: "other" as const, label: "Other" }
               ].map((opt) => (
                 <div key={opt.value} className="flex items-center gap-2">
-                  <RadioGroupItem id={opt.value} value={opt.value} />
-                  <Label htmlFor={opt.value}>{opt.label}</Label>
+                  <RadioGroupItem value={opt.value} />
+                  <Label>{opt.label}</Label>
                 </div>
               ))}
             </RadioGroup>

@@ -92,10 +92,10 @@ function FormLabel({
       )}
     >
       <LabelPrimitive.Root
-        data-slot="form-label"
-        data-error={!!error}
-        {...props}
-      />
+      data-slot="form-label"
+      data-error={!!error}
+      {...props}
+    />
     </div>
   )
 }
