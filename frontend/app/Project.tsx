@@ -10,6 +10,7 @@ import {
 import { trpc } from "@/lib/trpc"
 import { useQuery } from "@tanstack/react-query"
 import { Heading, Subheading } from "./Heading"
+import { QuestionnaireForm } from "./QuestionnaireForm"
 
 export function Project() {
   const { id } = useParams()
@@ -39,7 +40,7 @@ export function Project() {
 
       <div className="flex flex-col gap-2 mt-4">
         <Subheading>Questionnaire</Subheading>
-        <div className="flex flex-col gap-4">Your take-home assignment response goes here!</div>
+        <QuestionnaireForm />
       </div>
     </div>
   )

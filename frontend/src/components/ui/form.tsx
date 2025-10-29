@@ -11,7 +11,6 @@ import {
   type FieldValues
 } from "react-hook-form"
 
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
 // https://ui.shadcn.com/docs/components/form
@@ -79,17 +78,25 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {
-  const { error, formItemId } = useFormField()
+function FormLabel({ 
+  className, 
+  ...props 
+}: React.ComponentProps<typeof LabelPrimitive.Root> & { className?: string }) {
+  const { error } = useFormField()
 
   return (
-    <Label
-      data-slot="form-label"
-      data-error={!!error}
-      className={cn("data-[error=true]:text-destructive", className)}
-      htmlFor={formItemId}
-      {...props}
-    />
+    <div
+      className={cn(
+        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 data-[error=true]:text-destructive",
+        className
+      )}
+    >
+      <LabelPrimitive.Root
+        data-slot="form-label"
+        data-error={!!error}
+        {...props}
+      />
+    </div>
   )
 }
 
