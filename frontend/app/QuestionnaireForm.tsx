@@ -4,8 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { trpc } from "@/lib/trpc"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useMemo, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 type WorkType = "interior" | "exterior" | "property_additions"
 
@@ -40,22 +40,32 @@ export function QuestionnaireForm({ projectId }: QuestionnaireFormProps) {
   const [exteriorWork, setExteriorWork] = useState<ExteriorWork[]>([])
   const [propertyAddition, setPropertyAddition] = useState<PropertyAddition | "">("")
   const [requirements, setRequirements] = useState<PermitRequirement | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const hasInitialized = useRef(false)
 
-  const { mutateAsync: submitQuestionnaire, isPending } = useMutation(trpc.questionnaire.submit.mutationOptions())
+  const queryClient = useQueryClient()
+  const { mutateAsync: submitQuestionnaire, isPending } = useMutation({
+    ...trpc.questionnaire.submit.mutationOptions(),
+    onSuccess: () => {
+      // Invalidate and refetch the questionnaire query
+      queryClient.invalidateQueries({ queryKey: trpc.questionnaire.getByProject.queryKey({ projectId }) })
+    }
+  })
   
   // Load existing questionnaire when component mounts
   const { data: existingQuestionnaire } = useQuery(
     trpc.questionnaire.getByProject.queryOptions({ projectId })
   )
 
-  // Populate form with existing questionnaire data when available
-  useMemo(() => {
-    if (existingQuestionnaire) {
+  // Populate form with existing questionnaire data when available (only on first mount)
+  useEffect(() => {
+    if (existingQuestionnaire && !hasInitialized.current) {
       setWorkTypes(existingQuestionnaire.responses.workTypes)
       setInteriorWork(existingQuestionnaire.responses.interiorWork || [])
       setExteriorWork(existingQuestionnaire.responses.exteriorWork || [])
       setPropertyAddition(existingQuestionnaire.responses.propertyAddition || "")
       setRequirements(existingQuestionnaire.permitRequirement)
+      hasInitialized.current = true
     }
   }, [existingQuestionnaire])
 
@@ -100,6 +110,7 @@ export function QuestionnaireForm({ projectId }: QuestionnaireFormProps) {
         projectId
       })
       setRequirements(result.permitRequirement)
+      setIsEditing(false)
     } catch (error) {
       console.error("Failed to submit questionnaire:", error)
     }
@@ -235,9 +246,9 @@ export function QuestionnaireForm({ projectId }: QuestionnaireFormProps) {
           </div>
         )}
 
-        {!requirements && (
+        {(!requirements || isEditing) && (
           <Button className="w-full" disabled={!canSubmit || isPending} onClick={onSubmit}>
-            {isPending ? "Submitting..." : "Submit questionnaire"}
+            {isPending ? "Submitting..." : isEditing ? "Update questionnaire" : "Submit questionnaire"}
           </Button>
         )}
       </CardContent>
@@ -257,6 +268,17 @@ export function QuestionnaireForm({ projectId }: QuestionnaireFormProps) {
                 </li>
               ))}
             </ul>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(true)
+                  setRequirements(null)
+                }}
+              >
+                Edit Questionnaire
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -7,11 +7,26 @@ export const questionnaire = router({
     .input(QUESTIONNAIRE_SCHEMA.extend({ projectId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const permitRequirement = ctx.cradle.questionnaires.calculatePermitRequirement(input)
-      const questionnaire = ctx.cradle.questionnaires.add({
-        projectId: input.projectId,
-        responses: input,
-        permitRequirement
-      })
+      
+      // Check if questionnaire already exists for this project
+      const existing = ctx.cradle.questionnaires.getByProjectId(input.projectId)
+      
+      let questionnaire
+      if (existing) {
+        // Update existing questionnaire
+        questionnaire = ctx.cradle.questionnaires.updateByProjectId(input.projectId, {
+          responses: input,
+          permitRequirement
+        })
+      } else {
+        // Create new questionnaire
+        questionnaire = ctx.cradle.questionnaires.add({
+          projectId: input.projectId,
+          responses: input,
+          permitRequirement
+        })
+      }
+      
       return ctx.cradle.questionnaires.toModel(questionnaire)
     }),
 

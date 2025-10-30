@@ -27,6 +27,15 @@ export class QuestionnaireStore extends Store<QuestionnaireItem> {
     }
   }
 
+  updateByProjectId(projectId: string, updates: Partial<Omit<QuestionnaireItem, "id" | "createdAt">>) {
+    const existing = this.getByProjectId(projectId)
+    if (!existing) {
+      throw new Error("Questionnaire not found for this project")
+    }
+    this.update(existing.id, updates)
+    return this.get(existing.id)!
+  }
+
   calculatePermitRequirement(responses: any): PermitRequirement {
     const { workTypes = [], interiorWork = [], exteriorWork = [], propertyAddition } = responses
 
